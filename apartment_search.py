@@ -6,9 +6,9 @@ import smtplib, ssl
 import re
 from functools import cached_property
 from abc import ABC, abstractmethod
-from ._secrets import EMAIL, PASSWORD
+import _secrets
 
-DESIRED_MONTHS = range(2, 6)
+DESIRED_MONTHS = range(3, 6)
 
 
 class ApartmentSite(ABC):
@@ -38,6 +38,30 @@ class ApartmentSite(ABC):
         """Should return a descriptive message of the available apartments
         if there are any, otherwise the empty string or None"""
         ...
+
+
+class TWallSite(ApartmentSite):
+    """Base class for apartments listed by TWall Enterprise"""
+
+    @cached_property
+    def available_apartments_msg(self) -> str:
+        msg = ""
+        for dl in self.soup.find_all("dl"):
+            availability = False
+            bedrooms = False
+            for dd in dl.find_all("dd"):
+                content = str(dd.get_text())
+                dd_class = dd["class"]
+                if len(dd_class) > 1 and dd_class[1] == "js-listing-available":
+                    availability = content.startswith(
+                        tuple(str(month) for month in DESIRED_MONTHS)
+                    )
+                elif content.startswith("2 bd"):
+                    bedrooms = True
+                if all((availability, bedrooms)):
+                    msg += dl.get_text()
+                    break
+        return msg
 
 
 class VeritasSite(ApartmentSite):
@@ -85,30 +109,16 @@ class VeritasSite(ApartmentSite):
         return msg
 
 
-class MiddletonCenter(ApartmentSite):
+class MiddletonCenter(TWallSite):
     @property
-    def url(self):
-        return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES"
+    def url(self) -> str:
+        return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES")
 
-    @cached_property
-    def available_apartments_msg(self) -> str:
-        msg = ""
-        for dl in self.soup.find_all("dl"):
-            availability = False
-            bedrooms = False
-            for dd in dl.find_all("dd"):
-                content = str(dd.get_text())
-                dd_class = dd["class"]
-                if len(dd_class) > 1 and dd_class[1] == "js-listing-available":
-                    availability = content.startswith(
-                        tuple(str(month) for month in DESIRED_MONTHS)
-                    )
-                elif content.startswith("2 bd"):
-                    bedrooms = True
-                if all((availability, bedrooms)):
-                    msg += dl.get_text()
-                    break
-        return msg
+
+class ConservancyBend(TWallSite):
+    @property
+    def url(self) -> str:
+        return "https://twall.appfolio.com/listings?1552018640986&amp;filters%5Bproperty_list%5D=CONSERVANCY%20BEND"
 
 
 class WingraCenter(ApartmentSite):
@@ -175,7 +185,12 @@ class WingraShores(ApartmentSite):
 
 def main():
     try:
-        sites: tuple[ApartmentSite] = (WingraCenter(), MiddletonCenter(), WingraShores())
+        sites: tuple[ApartmentSite] = (
+            WingraCenter(),
+            MiddletonCenter(),
+            WingraShores(),
+            ConservancyBend(),
+        )
         msg = "\n\n".join(site.available_apartments_msg for site in sites)
     except Exception as e:
         msg = f"Error in apartment script! {e}"
@@ -188,8 +203,8 @@ def main():
 def email_results(msg):
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
-    sender_email = EMAIL  # Enter your address
-    receiver_email = EMAIL  # Enter receiver address
+    sender_email = _secrets.EMAIL  # Enter your address
+    receiver_email = _.secrets.EMAIL  # Enter receiver address
     message = """\
         Subject: New Apartment Opening
 
@@ -198,9 +213,8 @@ def email_results(msg):
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, PASSWORD)
+        server.login(sender_email, _secrets.PASSWORD)
         server.sendmail(sender_email, receiver_email, message)
-
 
 if __name__ == "__main__":
     main()
