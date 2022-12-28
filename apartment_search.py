@@ -8,13 +8,18 @@ from functools import cached_property
 from abc import ABC, abstractmethod
 import _secrets
 from email.message import EmailMessage
+from urllib.parse import urlparse
 
-DESIRED_MONTHS = range(2, 6)
+DESIRED_MONTHS = range(3, 6)
 
 
 class ApartmentSite(ABC):
     def __init__(self):
         self.html = self.get_html()
+
+    @property
+    def name(self) -> str:
+        return urlparse(self.url).netloc
 
     @property
     @abstractmethod
@@ -78,6 +83,10 @@ class VeritasSite(ApartmentSite):
         "404",
         "104",
     ]
+    
+    @property
+    def name(self) -> str:
+        return "Veritas Village"
 
     @property
     def url(self):
@@ -113,17 +122,29 @@ class VeritasSite(ApartmentSite):
 
 class MiddletonCenterSite(TWallSite):
     @property
+    def name(self) -> str:
+        return "Middleton Center"
+
+    @property
     def url(self) -> str:
         return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES"
 
 
 class ConservancyBendSite(TWallSite):
     @property
+    def name(self) -> str:
+        return "Conservancy Bend"
+
+    @property
     def url(self) -> str:
         return "https://twall.appfolio.com/listings?1552018640986&amp;filters%5Bproperty_list%5D=CONSERVANCY%20BEND"
 
 
 class WingraCenterSite(ApartmentSite):
+    @property
+    def name(self) -> str:
+        return "Wingra Center"
+
     @property
     def url(self) -> str:
         return "https://brunerrealty.appfolio.com/listings?1665708928491&filters%5Border_by%5D=date_posted"
@@ -155,6 +176,10 @@ class WingraCenterSite(ApartmentSite):
 
 
 class WingraShoresSite(ApartmentSite):
+    @property
+    def name(self) -> str:
+        return "Wingra Shores"
+
     @property
     def url(self) -> str:
         return "https://jmichaelrealestate.com/property/2628-arbor-drive/"
@@ -193,7 +218,7 @@ def main():
             WingraShoresSite(),
             ConservancyBendSite(),
         )
-        msg = "\n\n".join(site.available_apartments_msg for site in sites)
+        msg = "\n\n".join(f"{site.name}\n{msg}" for site in sites if (msg := site.available_apartments_msg))
     except Exception as e:
         msg = f"Error in apartment script! {e}"
     if not msg.strip():
