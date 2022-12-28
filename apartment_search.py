@@ -111,19 +111,19 @@ class VeritasSite(ApartmentSite):
         return msg
 
 
-class MiddletonCenter(TWallSite):
+class MiddletonCenterSite(TWallSite):
     @property
     def url(self) -> str:
         return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES"
 
 
-class ConservancyBend(TWallSite):
+class ConservancyBendSite(TWallSite):
     @property
     def url(self) -> str:
         return "https://twall.appfolio.com/listings?1552018640986&amp;filters%5Bproperty_list%5D=CONSERVANCY%20BEND"
 
 
-class WingraCenter(ApartmentSite):
+class WingraCenterSite(ApartmentSite):
     @property
     def url(self) -> str:
         return "https://brunerrealty.appfolio.com/listings?1665708928491&filters%5Border_by%5D=date_posted"
@@ -154,7 +154,7 @@ class WingraCenter(ApartmentSite):
         return msg
 
 
-class WingraShores(ApartmentSite):
+class WingraShoresSite(ApartmentSite):
     @property
     def url(self) -> str:
         return "https://jmichaelrealestate.com/property/2628-arbor-drive/"
@@ -188,10 +188,10 @@ from email.message import EmailMessage
 def main():
     try:
         sites: tuple[ApartmentSite] = (
-            WingraCenter(),
-            MiddletonCenter(),
-            WingraShores(),
-            ConservancyBend(),
+            WingraCenterSite(),
+            MiddletonCenterSite(),
+            WingraShoresSite(),
+            ConservancyBendSite(),
         )
         msg = "\n\n".join(site.available_apartments_msg for site in sites)
     except Exception as e:
