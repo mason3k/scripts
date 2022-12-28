@@ -18,6 +18,7 @@ class ApartmentSite(ABC):
     @property
     @abstractmethod
     def url(self) -> str:
+        """The url of the website to parse"""
         ...
 
     def get_html(self) -> str:
@@ -34,7 +35,7 @@ class ApartmentSite(ABC):
 
     @cached_property
     @abstractmethod
-    def available_apartments_msg(self) -> str | None:
+    def available_apartments_msg(self) -> str:
         """Should return a descriptive message of the available apartments
         if there are any, otherwise the empty string or None"""
         ...
@@ -112,7 +113,7 @@ class VeritasSite(ApartmentSite):
 class MiddletonCenter(TWallSite):
     @property
     def url(self) -> str:
-        return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES")
+        return "https://twall.appfolio.com/listings?1551932808827&filters%5Bproperty_list%5D=MIDDLETON%20CENTER%20ALL%20PHASES"
 
 
 class ConservancyBend(TWallSite):
@@ -123,7 +124,7 @@ class ConservancyBend(TWallSite):
 
 class WingraCenter(ApartmentSite):
     @property
-    def url(self):
+    def url(self) -> str:
         return "https://brunerrealty.appfolio.com/listings?1665708928491&filters%5Border_by%5D=date_posted"
 
     @cached_property
@@ -154,10 +155,10 @@ class WingraCenter(ApartmentSite):
 
 class WingraShores(ApartmentSite):
     @property
-    def url(self):
+    def url(self) -> str:
         return "https://jmichaelrealestate.com/property/2628-arbor-drive/"
 
-    def get_html(self):
+    def get_html(self) -> str:
         req = Request(
             url=self.url,
             headers={"User-Agent": "Mozilla/5.0"},
@@ -165,7 +166,7 @@ class WingraShores(ApartmentSite):
         return urlopen(req).read().decode()
 
     @cached_property
-    def available_apartments_msg(self):
+    def available_apartments_msg(self) -> str:
         msg = ""
         for href in self.soup.find_all(href=re.compile("unit")):
             link = href.attrs["href"]
@@ -204,7 +205,7 @@ def email_results(msg):
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
     sender_email = _secrets.EMAIL  # Enter your address
-    receiver_email = _.secrets.EMAIL  # Enter receiver address
+    receiver_email = _secrets.EMAIL  # Enter receiver address
     message = """\
         Subject: New Apartment Opening
 
