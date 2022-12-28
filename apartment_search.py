@@ -7,8 +7,9 @@ import re
 from functools import cached_property
 from abc import ABC, abstractmethod
 import _secrets
+from email.message import EmailMessage
 
-DESIRED_MONTHS = range(3, 6)
+DESIRED_MONTHS = range(2, 6)
 
 
 class ApartmentSite(ABC):
@@ -183,7 +184,7 @@ class WingraShores(ApartmentSite):
 
         return msg
 
-
+from email.message import EmailMessage
 def main():
     try:
         sites: tuple[ApartmentSite] = (
@@ -200,22 +201,25 @@ def main():
     else:
         email_results(msg)
 
+def build_email_message(msg: str) -> EmailMessage:
+    email_msg = EmailMessage()
+    email_msg.set_content(msg)
+    email_msg['Subject'] = "New apartment opening"
+    email_msg['From'] = _secrets.EMAIL  # Enter your address
+    email_msg['To'] = _secrets.EMAIL  # Enter receiver address
+    return email_msg
 
-def email_results(msg):
+
+def email_results(msg: str) -> None:
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
-    sender_email = _secrets.EMAIL  # Enter your address
-    receiver_email = _secrets.EMAIL  # Enter receiver address
-    message = """\
-        Subject: New Apartment Opening
-
-        """
-    message += msg
+    email_msg = build_email_message(msg)
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, _secrets.PASSWORD)
-        server.sendmail(sender_email, receiver_email, message)
+        server.login(_secrets.EMAIL, _secrets.PASSWORD)
+        server.send_message(email_msg)
+
 
 if __name__ == "__main__":
     main()
