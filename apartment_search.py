@@ -218,7 +218,7 @@ def main():
             WingraShoresSite(),
             ConservancyBendSite(),
         )
-        msg = "\n\n".join(f"{site.name}\n{msg}" for site in sites if (msg := site.available_apartments_msg))
+        msg = "\n\n".join(f"{site.name}\n{site.url}\n{msg}" for site in sites if (msg := site.available_apartments_msg))
     except Exception as e:
         msg = f"Error in apartment script! {e}"
     if not msg.strip():
