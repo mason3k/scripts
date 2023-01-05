@@ -1,6 +1,8 @@
 from __future__ import annotations
 import contextlib
+import requests
 from urllib.request import urlopen, Request
+from urllib.parse import urlencode, urlunparse
 from bs4 import BeautifulSoup
 import smtplib, ssl
 import re
@@ -28,8 +30,8 @@ class ApartmentSite(ABC):
         ...
 
     def get_html(self) -> str:
-        page = urlopen(self.url)
-        html_bytes = page.read()
+        with urlopen(self.url) as page:
+            html_bytes = page.read()
         return html_bytes.decode("utf-8")
 
     def __bool__(self) -> bool:
@@ -83,7 +85,7 @@ class VeritasSite(ApartmentSite):
         "404",
         "104",
     ]
-    
+
     @property
     def name(self) -> str:
         return "Veritas Village"
@@ -175,6 +177,61 @@ class WingraCenterSite(ApartmentSite):
         return msg
 
 
+class ValenciaSite(ApartmentSite):
+    @property
+    def name(self) -> str:
+        return "Valencia"
+
+    @property
+    def url(self):
+        return "https://primeurbanproperties.com/wp-content/themes/primeurbanproperties/ajax/get_units.php"
+
+    def get_html(self) -> str:
+        headers = {
+            "authority": "primeurbanproperties.com",
+            "accept": "*/*",
+            "accept-language": "en-US,en;q=0.9",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "dnt": "1",
+            "origin": "https://primeurbanproperties.com",
+            "referer": "https://primeurbanproperties.com/property/valencia-place/",
+            "sec-ch-ua": '"Not?A_Brand";v="8", "Chromium";v="108"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"macOS"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+            "x-requested-with": "XMLHttpRequest",
+        }
+
+        data = {
+            "property": "41",
+            "den": "0",
+            "bedrooms": "-1",
+            "date": "05/01/2023",
+            "sort": "price-down",
+            "aprtlink": "1",
+        }
+
+        response = requests.post(
+            "https://primeurbanproperties.com/wp-content/themes/primeurbanproperties/ajax/get_units.php",
+            headers=headers,
+            data=data,
+        )
+
+        return response.content.decode("utf-8")
+
+    @cached_property
+    def available_apartments_msg(self) -> str:
+        msg = ""
+        for unit in self.soup.find_all(class_="unit-card"):
+            unit_msg = '\n'.join(unit.stripped_strings)
+            msg += f"unit_msg \n\n"
+        return msg
+
+
+
 class WingraShoresSite(ApartmentSite):
     @property
     def name(self) -> str:
@@ -209,7 +266,10 @@ class WingraShoresSite(ApartmentSite):
 
         return msg
 
+
 from email.message import EmailMessage
+
+
 def main():
     try:
         sites: tuple[ApartmentSite] = (
@@ -217,8 +277,13 @@ def main():
             MiddletonCenterSite(),
             WingraShoresSite(),
             ConservancyBendSite(),
+            ValenciaSite(),
         )
-        msg = "\n\n".join(f"{site.name}\n{site.url}\n{msg}" for site in sites if (msg := site.available_apartments_msg))
+        msg = "\n\n".join(
+            f"{site.name}\n{site.url}\n{msg}"
+            for site in sites
+            if (msg := site.available_apartments_msg)
+        )
     except Exception as e:
         msg = f"Error in apartment script! {e}"
     if not msg.strip():
@@ -226,12 +291,13 @@ def main():
     else:
         email_results(msg)
 
+
 def build_email_message(msg: str) -> EmailMessage:
     email_msg = EmailMessage()
     email_msg.set_content(msg)
-    email_msg['Subject'] = "New apartment opening"
-    email_msg['From'] = _secrets.EMAIL  # Enter your address
-    email_msg['To'] = _secrets.EMAIL  # Enter receiver address
+    email_msg["Subject"] = "New apartment opening"
+    email_msg["From"] = _secrets.EMAIL  # Enter your address
+    email_msg["To"] = _secrets.EMAIL  # Enter receiver address
     return email_msg
 
 
