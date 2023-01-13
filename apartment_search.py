@@ -166,7 +166,7 @@ class WingraCenterSite(ApartmentSite):
                 dd_class = dd["class"]
                 if len(dd_class) > 1 and dd_class[1] == "js-listing-available":
                     with contextlib.suppress(ValueError):
-                        availability = int(content.split("/", 1)[0]) in range(2, 7)
+                        availability = int(content.split("/", 1)[0]) in DESIRED_MONTHS
                 elif content.startswith("2 bd"):
                     bedrooms = True
                 if availability and bedrooms:
@@ -225,8 +225,8 @@ class ValenciaSite(ApartmentSite):
     def available_apartments_msg(self) -> str:
         msg = ""
         for unit in self.soup.find_all(class_="unit-card"):
-            unit_msg = "\n".join(unit.stripped_strings)
-            msg += f"unit_msg \n\n"
+            unit_msg = '\n'.join(unit.stripped_strings)
+            msg += f"{unit_msg} \n\n"
         return msg
 
 
