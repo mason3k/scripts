@@ -1,8 +1,6 @@
 from __future__ import annotations
 import contextlib
-import requests
-from urllib.request import urlopen, Request
-from urllib.parse import urlencode, urlunparse
+import httpx
 from bs4 import BeautifulSoup
 import smtplib, ssl
 import re
@@ -29,10 +27,10 @@ class ApartmentSite(ABC):
         """The url of the website to parse"""
         ...
 
-    def get_html(self) -> str:
-        with urlopen(self.url) as page:
-            html_bytes = page.read()
-        return html_bytes.decode("utf-8")
+    def get_html(self, *args, **kwargs) -> str:
+        r = httpx.get(self.url, *args, **kwargs)
+        r.raise_for_status()
+        return r.text
 
     def __bool__(self) -> bool:
         return bool(self.available_apartments_msg)
@@ -214,22 +212,22 @@ class ValenciaSite(ApartmentSite):
             "aprtlink": "1",
         }
 
-        response = requests.post(
+        r = httpx.post(
             "https://primeurbanproperties.com/wp-content/themes/primeurbanproperties/ajax/get_units.php",
             headers=headers,
             data=data,
         )
+        r.raise_for_status()
 
-        return response.content.decode("utf-8")
+        return r.text
 
     @cached_property
     def available_apartments_msg(self) -> str:
         msg = ""
         for unit in self.soup.find_all(class_="unit-card"):
-            unit_msg = '\n'.join(unit.stripped_strings)
+            unit_msg = "\n".join(unit.stripped_strings)
             msg += f"{unit_msg} \n\n"
         return msg
-
 
 
 class WingraShoresSite(ApartmentSite):
@@ -242,20 +240,15 @@ class WingraShoresSite(ApartmentSite):
         return "https://jmichaelrealestate.com/property/2628-arbor-drive/"
 
     def get_html(self) -> str:
-        req = Request(
-            url=self.url,
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
-        return urlopen(req).read().decode()
+        return super().get_html(headers={"User-Agent": "Mozilla/5.0"})
 
     @cached_property
     def available_apartments_msg(self) -> str:
         msg = ""
         for href in self.soup.find_all(href=re.compile("unit")):
             link = href.attrs["href"]
-            req = Request(url=link, headers={"User-Agent": "Mozilla/5.0"})
-            sub_html = urlopen(req).read().decode()
-            sub_soup = BeautifulSoup(sub_html, "html.parser")
+            r = httpx.get(url=link, headers={"User-Agent": "Mozilla/5.0"})
+            sub_soup = BeautifulSoup(r.text, "html.parser")
             available = sub_soup.find(
                 "strong", text=re.compile("(?i)available")
             ).next_sibling
