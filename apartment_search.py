@@ -225,7 +225,7 @@ class ValenciaSite(ApartmentSite):
     def available_apartments_msg(self) -> str:
         msg = ""
         for unit in self.soup.find_all(class_="unit-card"):
-            unit_msg = '\n'.join(unit.stripped_strings)
+            unit_msg = "\n".join(unit.stripped_strings)
             msg += f"{unit_msg} \n\n"
         return msg
 
