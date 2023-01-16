@@ -67,7 +67,6 @@ class TWallSite(ApartmentSite):
                     bedrooms = True
                 if all((availability, bedrooms)):
                     msg += dl.get_text()
-                    break
         return msg
 
 
