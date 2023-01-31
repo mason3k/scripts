@@ -60,9 +60,7 @@ class TWallSite(ApartmentSite):
                 content = str(dd.get_text())
                 dd_class = dd["class"]
                 if len(dd_class) > 1 and dd_class[1] == "js-listing-available":
-                    availability = content.startswith(
-                        tuple(str(month) for month in DESIRED_MONTHS)
-                    )
+                    availability = content.startswith(tuple(str(month) for month in DESIRED_MONTHS))
                 elif content.startswith("2 bd"):
                     bedrooms = True
                 if all((availability, bedrooms)):
@@ -98,19 +96,14 @@ class VeritasSite(ApartmentSite):
             bedrooms = False
             availability = False
             apt_addr = ";".join(
-                address.get_text()
-                for address in dl.parent.parent.select("span.u-pad-rm")
+                address.get_text() for address in dl.parent.parent.select("span.u-pad-rm")
             )
-            desired_apts = any(
-                wanted_apt in apt_addr for wanted_apt in self.WANTED_APTS
-            )
+            desired_apts = any(wanted_apt in apt_addr for wanted_apt in self.WANTED_APTS)
             for dd in dl.find_all("dd"):
                 content = str(dd.get_text())
                 dd_class = dd["class"]
                 if len(dd_class) > 1 and dd_class[1] == "js-listing-available":
-                    availability = content.startswith(
-                        tuple(str(month) for month in DESIRED_MONTHS)
-                    )
+                    availability = content.startswith(tuple(str(month) for month in DESIRED_MONTHS))
                 elif content.startswith(("Studio", "1")):
                     bedrooms = True
                 if all((availability, desired_apts, bedrooms)):
@@ -155,8 +148,7 @@ class WingraCenterSite(ApartmentSite):
             bedrooms = False
             availability = False
             apt_addr = ";".join(
-                address.get_text()
-                for address in dl.parent.parent.select("span.u-pad-rm")
+                address.get_text() for address in dl.parent.parent.select("span.u-pad-rm")
             )
             if "arbor" not in apt_addr.lower():
                 continue
@@ -248,13 +240,9 @@ class WingraShoresSite(ApartmentSite):
             link = href.attrs["href"]
             r = httpx.get(url=link, headers={"User-Agent": "Mozilla/5.0"})
             sub_soup = BeautifulSoup(r.text, "html.parser")
-            available = sub_soup.find(
-                "strong", text=re.compile("(?i)available")
-            ).next_sibling
+            available = sub_soup.find("strong", text=re.compile("(?i)available")).next_sibling
             if int(available.split("/", 1)[0]) in DESIRED_MONTHS:
-                msg += (
-                    f"Wingra Shores apartment available: {sub_soup.find('title').text}"
-                )
+                msg += f"Wingra Shores apartment available: {sub_soup.find('title').text}"
 
         return msg
 
