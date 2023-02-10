@@ -20,7 +20,7 @@ def main():
     filename = TODAY.strftime("%Y_%m_%d") + ".txt"
     output = ""
     with (
-        open(r"/Users/sjones/Downloads/calendar.csv", "r", encoding="utf-8") as csv_file,
+        open(r"/Users/sjones/Downloads/calendar.csv", encoding="utf-8") as csv_file,
         open(f"/Users/sjones/Downloads/daily_tasks/{filename}", "w") as output_file,
     ):
         csv_reader = csv.DictReader(csv_file, delimiter=",")
@@ -100,7 +100,7 @@ def _not_filtered_subject(row):
 
 
 def _row_is_today(row):
-    for key in ["Start Time", "End Time"]:
+    for key in ("Start Time", "End Time"):
         _convert_to_datetime(row, key)
     event_date = row["Start Time"].date()
     return event_date == TODAY

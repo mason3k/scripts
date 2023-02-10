@@ -17,9 +17,9 @@ FILTERED_SUBJECTS = [
 def main():
     filename = TODAY.strftime("%Y_%m_%d") + ".txt"
     output = ""
-    with open(
-        r"C:\Users\sjones\Downloads\test_calendar.CSV", "r", encoding="utf-8"
-    ) as csv_file, open(r"C:\Users\sjones\Downloads\daily_tasks\\" + filename, "w") as output_file:
+    with open(r"C:\Users\sjones\Downloads\test_calendar.CSV", encoding="utf-8") as csv_file, open(
+        r"C:\Users\sjones\Downloads\daily_tasks\\" + filename, "w"
+    ) as output_file:
         csv_reader = csv.DictReader(csv_file, delimiter=",")
         no_lunch = False
 
@@ -30,7 +30,7 @@ def main():
                 no_lunch = True
                 if "Gritters" in row["Meeting Organizer"]:
                     row['\ufeff"Subject"'] = "Matt Lunch"
-            for key in ["Start Time", "End Time"]:
+            for key in ("Start Time", "End Time"):
                 _convert_to_datetime(row, key)
             if (
                 "Gritters" in row["Meeting Organizer"]
