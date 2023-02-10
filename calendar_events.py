@@ -1,5 +1,6 @@
 import csv
 from datetime import date, datetime, timedelta
+
 import pyperclip
 
 TODAY = date.today()

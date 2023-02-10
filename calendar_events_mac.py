@@ -1,8 +1,9 @@
 import csv
 from datetime import date, datetime, timedelta, timezone
-import pyperclip
-import dateutil.parser
 from typing import TextIO
+
+import dateutil.parser
+import pyperclip
 
 TODAY = date.today()
 FILTERED_SUBJECTS = [

@@ -1,14 +1,18 @@
 from __future__ import annotations
+
 import contextlib
+import re
+import smtplib
+import ssl
+from abc import ABC, abstractmethod
+from email.message import EmailMessage
+from functools import cached_property
+from urllib.parse import urlparse
+
 import httpx
 from bs4 import BeautifulSoup
-import smtplib, ssl
-import re
-from functools import cached_property
-from abc import ABC, abstractmethod
+
 import _secrets
-from email.message import EmailMessage
-from urllib.parse import urlparse
 
 DESIRED_MONTHS = range(3, 6)
 
@@ -123,7 +127,7 @@ class MiddletonCenterSite(TWallSite):
 
 
 class ConservancyBendSite(TWallSite):
-    @property
+    @propertyis
     def name(self) -> str:
         return "Conservancy Bend"
 
