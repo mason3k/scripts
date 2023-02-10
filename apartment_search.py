@@ -73,7 +73,7 @@ class TWallSite(ApartmentSite):
 
 
 class VeritasSite(ApartmentSite):
-    WANTED_APTS = [
+    WANTED_APTS = (
         "108",
         "210",
         "310",
@@ -83,7 +83,7 @@ class VeritasSite(ApartmentSite):
         "304",
         "404",
         "104",
-    ]
+    )
 
     @property
     def name(self) -> str:
