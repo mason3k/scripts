@@ -127,7 +127,7 @@ class MiddletonCenterSite(TWallSite):
 
 
 class ConservancyBendSite(TWallSite):
-    @propertyis
+    @property
     def name(self) -> str:
         return "Conservancy Bend"
 
