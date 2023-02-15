@@ -68,7 +68,7 @@ class TWallSite(ApartmentSite):
                 elif content.startswith("2 bd"):
                     bedrooms = True
                 if all((availability, bedrooms)):
-                    msg += dl.get_text()
+                    msg += dl.get_text().replace("\n" * 3, "\n")
         return msg
 
 
@@ -111,7 +111,7 @@ class VeritasSite(ApartmentSite):
                 elif content.startswith(("Studio", "1")):
                     bedrooms = True
                 if all((availability, desired_apts, bedrooms)):
-                    msg += dl.get_text()
+                    msg += dl.get_text().replace("\n" * 3, "\n")
 
         return msg
 
