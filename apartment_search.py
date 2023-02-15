@@ -5,7 +5,9 @@ import re
 import smtplib
 import ssl
 from abc import ABC, abstractmethod
-from email.message import EmailMessage
+from dataclasses import InitVar, dataclass, field
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from functools import cached_property
 from urllib.parse import urlparse
 
@@ -251,7 +253,40 @@ class WingraShoresSite(ApartmentSite):
         return msg
 
 
-from email.message import EmailMessage
+@dataclass
+class FormattedEmail:
+    sites: InitVar[tuple[ApartmentSite] | str]
+    html_msg: MIMEText = field(init=False)
+    plain_msg: MIMEText = field(init=False)
+    empty: bool = field(init=False, default=False)
+
+    def __post_init__(self, sites) -> None:
+        if isinstance(sites, str):
+            self.html_msg = MIMEText(_htmlize(sites))
+            self.plain_msg = MIMEText(sites)
+            self.empty = not sites.strip()
+        else:
+            html_lines: list[str] = []
+            plain_lines: list[str] = []
+            for site in sites:
+                if msg := site.available_apartments_msg:
+                    plain_lines += f"{site.name}\n{site.url}\n{msg}"
+                    html_msg = msg.replace("\n", "</br>")
+                    html_lines += f'<h2><a href="{site.url}">{site.name}</a><p>{html_msg}</p>'
+
+            self.html_msg = MIMEText(self._htmlize("".join(html_lines)), "html")
+            self.plain_msg = MIMEText("\n\n".join(plain_lines), "plain")
+            self.empty = not any(line.strip() for line in plain_lines)
+
+    def _htmlize(self, str: str) -> str:
+        return f"""\
+        <html>
+        <head></head>
+        <body>
+            {str}
+        </body>
+        </html>
+        """
 
 
 def main():
@@ -263,32 +298,27 @@ def main():
             ConservancyBendSite(),
             ValenciaSite(),
         )
-        msg = "\n\n".join(
-            f"{site.name}\n{site.url}\n{msg}"
-            for site in sites
-            if (msg := site.available_apartments_msg)
-        )
+        email = FormattedEmail(sites)
     except Exception as e:
-        msg = f"Error in apartment script! {e}"
-    if not msg.strip():
-        return
-    else:
-        email_results(msg)
+        email = FormattedEmail(f"Error in apartment script! {e}")
+    if not email.empty:
+        email_results(email)
 
 
-def build_email_message(msg: str) -> EmailMessage:
-    email_msg = EmailMessage()
-    email_msg.set_content(msg)
+def build_email_message(email: FormattedEmail) -> MIMEMultipart:
+    email_msg = MIMEMultipart("alternative")
     email_msg["Subject"] = "New apartment opening"
     email_msg["From"] = _secrets.EMAIL  # Enter your address
     email_msg["To"] = _secrets.EMAIL  # Enter receiver address
+    email_msg.attach(email.plain_msg)
+    email_msg.attach(email.html_msg)
     return email_msg
 
 
-def email_results(msg: str) -> None:
+def email_results(email: FormattedEmail) -> None:
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
-    email_msg = build_email_message(msg)
+    email_msg = build_email_message(email)
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
