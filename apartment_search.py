@@ -289,22 +289,6 @@ class FormattedEmail:
         """
 
 
-def main():
-    try:
-        sites: tuple[ApartmentSite] = (
-            WingraCenterSite(),
-            MiddletonCenterSite(),
-            WingraShoresSite(),
-            ConservancyBendSite(),
-            ValenciaSite(),
-        )
-        email = FormattedEmail(sites)
-    except Exception as e:
-        email = FormattedEmail(f"Error in apartment script! {e}")
-    if not email.empty:
-        email_results(email)
-
-
 def build_email_message(email: FormattedEmail) -> MIMEMultipart:
     email_msg = MIMEMultipart("alternative")
     email_msg["Subject"] = "New apartment opening"
@@ -324,6 +308,22 @@ def email_results(email: FormattedEmail) -> None:
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
         server.login(_secrets.EMAIL, _secrets.PASSWORD)
         server.send_message(email_msg)
+
+
+def main():
+    try:
+        sites: tuple[ApartmentSite] = (
+            WingraCenterSite(),
+            MiddletonCenterSite(),
+            WingraShoresSite(),
+            ConservancyBendSite(),
+            ValenciaSite(),
+        )
+        email = FormattedEmail(sites)
+    except Exception as e:
+        email = FormattedEmail(f"Error in apartment script! {e}")
+    if not email.empty:
+        email_results(email)
 
 
 if __name__ == "__main__":
