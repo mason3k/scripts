@@ -1,10 +1,11 @@
 import csv
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta, timezone
 from typing import TextIO
 from pathlib import Path
 import dateutil.parser
 import pyperclip
 from dataclasses import dataclass
+from typing import ClassVar
 
 TODAY = date.today()
 FILTERED_SUBJECTS = [
@@ -19,6 +20,7 @@ FILTERED_SUBJECTS = [
 
 @dataclass
 class Event:
+    timezone: ClassVar = timezone(-timedelta(hours=6))  # US/Central
     title: str
     start_time_str: str
     end_time_str: str
@@ -28,11 +30,19 @@ class Event:
         self.end_time = dateutil.parser.isoparse(self.end_time_str)
 
     def __bool__(self) -> bool:
-        return self.title in FILTERED_SUBJECTS
+        return self.title not in FILTERED_SUBJECTS
 
     @property
     def is_today(self) -> bool:
         return self.start_time.date() == TODAY
+
+    @classmethod
+    def from_time(cls, title: str, start_time: time, end_time: time, date: date = TODAY):
+        return cls(
+            title,
+            str(datetime.combine(TODAY, start_time, tzinfo=cls.timezone)),
+            str(datetime.combine(TODAY, end_time, tzinfo=cls.timezone)),
+        )
 
 
 def main():
@@ -58,10 +68,8 @@ def main():
 
         if not no_lunch:
             todays_events.append(
-                Event(
-                    "Lunch",
-                    str(datetime.combine(TODAY, time(hour=11))),
-                    str(datetime.combine(TODAY, time(hour=11, minute=30))),
+                Event.from_time(
+                    "Lunch", start_time=time(hour=11), end_time=time(hour=11, minute=30)
                 )
             )
 
