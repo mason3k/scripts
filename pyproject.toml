@@ -9,6 +9,7 @@ authors = [
 ]
 description = "Misc scripts for for screen scraping, utility functions, etc."
 readme = "README.md"
+version = "0.0.1"
 requires-python = ">=3.10"
 dependencies = [
     "beautifulsoup4==4.11.1",
